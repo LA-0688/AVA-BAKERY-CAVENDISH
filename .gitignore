@@ -16,3 +16,12 @@ veda
 *.njsproj
 *.sln
 *.sw?
+
+# Generated builds and local settings
+.next/
+.turbo/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+debug.log

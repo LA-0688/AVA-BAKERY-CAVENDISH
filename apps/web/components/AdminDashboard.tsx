@@ -9,7 +9,6 @@ import {
   Plus, X, Trash2, Eye, EyeOff, Edit, Package, ChevronRight, Activity
 } from 'lucide-react';
 import { supabase, type Product } from '../lib/supabase';
-import AgentLogsWorkspace from './AgentLogsWorkspace';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -47,7 +46,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('synced');
   
   // Inventory Tab states
-  const [currentTab, setCurrentTab] = useState<'orders' | 'inventory' | 'agents'>('orders');
+  const [currentTab, setCurrentTab] = useState<'orders' | 'inventory'>('orders');
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
@@ -102,28 +101,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
     }
   };
 
-  // Set role to admin programmatically for sandbox seamless operations
-  useEffect(() => {
-    const upgradeSessionToAdmin = async () => {
-      try {
-        const sessionToken = localStorage.getItem('sb-kimmnbpopbmutkowdssa-auth-token');
-        const token = sessionToken ? JSON.parse(sessionToken)?.access_token : null;
-        if (token) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase
-              .from('profiles')
-              .update({ role: 'admin' })
-              .eq('id', user.id);
-          }
-        }
-      } catch (err) {
-        console.error('Admin sandbox role upgrade error:', err);
-      }
-    };
-    upgradeSessionToAdmin();
-  }, []);
-
   const fetchOrders = async () => {
     setSyncStatus('syncing');
     try {
@@ -156,11 +133,6 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
 
       let ordersList = (data as unknown as Order[]) || [];
 
-      // If empty (no checkouts yet), load beautiful mock data
-      if (ordersList.length === 0) {
-        ordersList = MOCK_ORDERS;
-      }
-
       // Check if new orders arrived (count increase) and play ambient chime
       if (prevOrdersCountRef.current > 0 && ordersList.length > prevOrdersCountRef.current) {
         playBakeryBell();
@@ -171,7 +143,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
     } catch (err) {
       console.error('Failed to load real-time orders:', err);
       // Failover to gorgeous mock data so user is not stuck
-      setOrders(MOCK_ORDERS);
+      setOrders([]);
     } finally {
       setLoading(false);
       setSyncStatus('synced');
@@ -596,28 +568,10 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
             )}
           </button>
 
-          <button
-            onClick={() => setCurrentTab('agents')}
-            className={`font-serif text-xl tracking-wider pb-3 transition-all relative ${
-              currentTab === 'agents'
-                ? 'text-bakery-amber font-semibold font-bold flex items-center gap-2'
-                : 'text-bakery-charcoal/50 hover:text-bakery-charcoal/80 flex items-center gap-2'
-            }`}
-          >
-            <Activity className="h-5 w-5" />
-            AI Orchestrator
-            {currentTab === 'agents' && (
-              <motion.div
-                layoutId="activeTabUnderline"
-                className="absolute bottom-0 inset-x-0 h-0.5 bg-bakery-amber"
-              />
-            )}
-          </button>
+
         </div>
 
-        {currentTab === 'agents' ? (
-          <AgentLogsWorkspace />
-        ) : currentTab === 'orders' ? (
+        {currentTab === 'orders' ? (
           <>
             {/* METRICS ROW */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1297,114 +1251,7 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   );
 }
 
-// =========================================================================
-// MOCK FALLBACK ORDERS FOR TESTING VISUAL EXCELLENCE
-// =========================================================================
-const MOCK_ORDERS: Order[] = [
-  {
-    id: 'ord_mock_111111111111',
-    user_id: 'usr_mock_1',
-    status: 'paid',
-    total_amount: 760.00,
-    delivery_type: 'pickup',
-    delivery_address: null,
-    scheduled_time: 'Today, 11:30 AM',
-    created_at: new Date(Date.now() - 3 * 60000).toISOString(), // 3 mins ago
-    order_items: [
-      {
-        id: 'oi_1',
-        quantity: 2,
-        price_at_purchase: 290.00,
-        products: {
-          id: 'prod_1',
-          name: 'Country Sourdough',
-          category: 'Sourdough',
-          image_url: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73'
-        }
-      },
-      {
-        id: 'oi_2',
-        quantity: 1,
-        price_at_purchase: 180.00,
-        products: {
-          id: 'prod_2',
-          name: 'Rosemary Focaccia',
-          category: 'Focaccia',
-          image_url: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c'
-        }
-      }
-    ]
-  },
-  {
-    id: 'ord_mock_222222222222',
-    user_id: 'usr_mock_2',
-    status: 'preparing',
-    total_amount: 710.00,
-    delivery_type: 'delivery',
-    delivery_address: 'Apartment 4B, 24 Boulangerie Dr, Saint-Honoré',
-    scheduled_time: 'Tomorrow, 08:30 AM',
-    created_at: new Date(Date.now() - 15 * 60000).toISOString(), // 15 mins ago
-    order_items: [
-      {
-        id: 'oi_3',
-        quantity: 1,
-        price_at_purchase: 240.00,
-        products: {
-          id: 'prod_3',
-          name: 'Valrhona Chocolate Eclair',
-          category: 'Patisserie',
-          image_url: 'https://images.unsplash.com/photo-1511018556340-d16986a1c194'
-        }
-      },
-      {
-        id: 'oi_4',
-        quantity: 2,
-        price_at_purchase: 165.00,
-        products: {
-          id: 'prod_4',
-          name: 'Madagascar Vanilla Flat White',
-          category: 'Beverages',
-          image_url: 'https://images.unsplash.com/photo-1447078806655-409295609db1'
-        }
-      },
-      {
-        id: 'oi_5',
-        quantity: 1,
-        price_at_purchase: 140.00,
-        products: {
-          id: 'prod_5',
-          name: 'Freshly Brewed Americano',
-          category: 'Beverages',
-          image_url: ''
-        }
-      }
-    ]
-  },
-  {
-    id: 'ord_mock_333333333333',
-    user_id: 'usr_mock_3',
-    status: 'completed',
-    total_amount: 580.00,
-    delivery_type: 'pickup',
-    delivery_address: null,
-    scheduled_time: 'Yesterday, 02:00 PM',
-    created_at: new Date(Date.now() - 24 * 60 * 60000).toISOString(), // 1 day ago
-    order_items: [
-      {
-        id: 'oi_6',
-        quantity: 2,
-        price_at_purchase: 290.00,
-        products: {
-          id: 'prod_1',
-          name: 'Country Sourdough',
-          category: 'Sourdough',
-          image_url: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73'
-        }
-      }
-    ]
-  }
-];
-
+// Legacy product examples retained for UI reference only.
 export const FALLBACK_PRODUCTS_LOCAL: Product[] = [
   {
     id: 'prod_mock_1',

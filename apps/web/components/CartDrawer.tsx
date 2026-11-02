@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, Trash2 } from 'lucide-react';
 import { CartEntry } from '../store/cartStore';
 
 function CartItemImage({ src, alt }: { src: string; alt: string }) {
@@ -30,10 +30,9 @@ interface CartDrawerProps {
   onClose: () => void;
   cart: CartEntry[];
   onRemove: (productId: string) => void;
-  onCheckout: () => void;
 }
 
-export default function CartDrawer({ isOpen, onClose, cart, onRemove, onCheckout }: CartDrawerProps) {
+export default function CartDrawer({ isOpen, onClose, cart, onRemove }: CartDrawerProps) {
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
@@ -142,15 +141,15 @@ export default function CartDrawer({ isOpen, onClose, cart, onRemove, onCheckout
                   <span className="font-serif text-2xl font-bold text-bakery-charcoal">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <p className="text-[10px] text-bakery-charcoal/50 leading-relaxed mb-6 font-light">
-                  Tax and pickup options computed at final checkout stage. State synched instantly across all devices.
+                  Ordering is not available yet. Delivery charges will be quoted separately.
                 </p>
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={onCheckout}
+                  disabled
                   className="w-full bg-bakery-crust hover:bg-bakery-amber text-white py-4 rounded-full text-xs uppercase tracking-widest font-semibold transition-all shadow-md flex items-center justify-center gap-2"
                 >
-                  Proceed to Checkout <ArrowRight className="h-4 w-4" />
+                  Ordering coming soon
                 </motion.button>
               </div>
             )}
